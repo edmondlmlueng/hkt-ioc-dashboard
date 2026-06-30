@@ -10,7 +10,7 @@ import threading
 import queue
 
 # RTSP URL (you can change this later)
-rtsp_url = "rtsp://wowzaec2demo.streamlock.net/vod/mp4:BigBuckBunny_115k.mov"  # Test stream
+rtsp_url = "rtsp://9627b0bf2a7b.entrypoint.cloud.wowza.com:1935/app-p5260J38/66abe4b9_stream1"  # Test stream
 
 # Page Configuration
 st.set_page_config(
