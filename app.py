@@ -189,13 +189,16 @@ with col_genai:
     # --- Part 1: Spatial Alert Heatmap Card ---
     with st.container(border=True):
         st.subheader("🗺️ Zone Violation Spatial Heatmap")
+        
         fig = px.density_heatmap(
             st.session_state.event_logs, 
-            x="X", y="Y",
-            nbinsx=10, nbinsy=10,
+            x="X", 
+            y="Y",
+            nbinsx=10, 
+            nbinsy=10,
             color_continuous_scale="Viridis",
-            range_x=[0, 100],  # Fixed values added
-            range_y=[0, 100],  # Fixed values added
+            range_x=[0, 100],
+            range_y=[0, 100],
             labels={"X": "Width Vector (m)", "Y": "Depth Vector (m)"}
         )
         fig.update_layout(
@@ -208,7 +211,7 @@ with col_genai:
         )
         st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
 
-    # --- Part 2: Restored Event Log Table ---
+    # --- Part 2: Event Analytics Table ---
     with st.container(border=True):
         st.subheader("📊 Event Analytics Table")
         view_df = st.session_state.event_logs[["Timestamp", "Zone", "Violation", "Confidence"]]
