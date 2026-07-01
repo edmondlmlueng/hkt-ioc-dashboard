@@ -49,7 +49,8 @@ with col_logs:
         if image_files:
             st.success(f"Found {len(image_files)} alert photos")
             for file in image_files[:8]:
-                st.image(f"https://drive.google.com/uc?id={file['id']}", caption=file['name'], use_container_width=True)
+                st.image(f"https://drive.google.com/uc?export=view&id={file['id']}", 
+                        caption=file['name'], use_container_width=True)
         else:
             st.info("No alert photos found yet.")
     except Exception as e:
