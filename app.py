@@ -2,41 +2,22 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime
 
-st.set_page_config(page_title="HKT Smart Site IOC", page_icon="🛡️", layout="wide")
+st.set_page_config(page_title="HKT IOC", layout="wide")
 
-st.title("🛡️ HKT Smart Site Integrated Operations Centre (IOC)")
-st.subheader("Real-Time Safety Compliance & Analytics Terminal")
-st.markdown("---")
+st.title("🛡️ HKT Smart Site IOC")
+st.subheader("Real-Time Safety Dashboard")
 
-with st.sidebar:
-    st.header("Site Telemetry")
-    st.metric("Active Cameras", "4 / 4")
-    st.metric("Alert Status", "ALARM ACTIVE", "-2 Violations")
-    st.info("Location: Kowloon District, HK")
+st.success("Dashboard is running")
 
-col_video, col_logs, col_genai = st.columns([4, 3, 4])
+col1, col2 = st.columns(2)
 
-with col_video:
+with col1:
     st.header("📹 CCTV Live Feed")
-    st.info("Demo Mode")
     st.image("https://picsum.photos/id/1015/800/450", use_container_width=True, caption="Live Feed (Demo)")
 
-with col_logs:
-    st.header("🚨 Latest Alerts")
-    if "logs" not in st.session_state:
-        st.session_state.logs = pd.DataFrame([
-            {"Time": "09:15", "Zone": "Area A", "Event": "Missing Hard Hat"},
-        ])
-    st.dataframe(st.session_state.logs, use_container_width=True)
-    if st.button("Simulate New Alert"):
-        new = {"Time": datetime.now().strftime("%H:%M"), "Zone": "Zone B", "Event": "PPE Violation"}
-        st.session_state.logs = pd.concat([st.session_state.logs, pd.DataFrame([new])], ignore_index=True)
-        st.rerun()
+with col2:
+    st.header("🚨 Alerts")
+    if st.button("Simulate Alert"):
+        st.success("New alert received!")
 
-with col_genai:
-    st.header("🤖 GenAI Co-Pilot")
-    if st.button("⚡ Generate Daily Report"):
-        st.success("Report Generated!")
-        st.write("PPE Compliance: 94%")
-
-st.caption("HKT IOC PoC")
+st.caption("Simple PoC Version")
