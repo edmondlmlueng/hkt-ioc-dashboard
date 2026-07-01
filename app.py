@@ -44,12 +44,74 @@ with st.sidebar:
     st.metric("Alert Status", "ALARM ACTIVE", "-2 Violations")
     st.info("Location: Kowloon District, HK")
 
-# Initialize event logs with hidden tracking coordinates (X, Y) for the heatmap
-if "event_logs" not in st.session_state:
+# --- Automated Google Drive Text Parser Logic ---
+def fetch_and_parse_site_events():
+    try:
+        # Search the target folder for the unique log file name
+        results = service.files().list(
+            q=f"'{FOLDER_ID}' in parents and name = 'site_events.txt' and trashed=false",
+            fields="files(id, name)"
+        ).execute()
+        
+        items = results.get('files', [])
+        if not items:
+            return None
+            
+        file_id = items[0]['id']
+        
+        # Pull text raw byte data blocks securely from the API stream chunk
+        request = service.files().get_media(fileId=file_id)
+        file_stream = io.BytesIO()
+        downloader = MediaIoBaseDownload(file_stream, request)
+        done = False
+        while done is False:
+            status, done = downloader.next_chunk()
+            
+        file_stream.seek(0)
+        raw_text = file_stream.read().decode('utf-8')
+        
+        # Build systematic data frame records directly from the string blocks
+        parsed_logs = []
+        lines = raw_text.split('\n')
+        
+        for line in lines:
+            if "|" in line:
+                tokens = line.split("|")
+                log_entry = {}
+                for token in tokens:
+                    if ":" in token:
+                        key, val = token.split(":", 1)
+                        k_clean = key.strip().upper()
+                        v_clean = val.strip()
+                        
+                        if "TIMESTAMP" in k_clean: log_entry["Timestamp"] = v_clean
+                        elif "ZONE" in k_clean: log_entry["Zone"] = v_clean
+                        elif "EVENT" in k_clean: log_entry["Violation"] = v_clean
+                        elif "CONFIDENCE" in k_clean: log_entry["Confidence"] = v_clean
+                
+                if "Violation" in log_entry:
+                    # Provide automated spatial mapping tags based on the Zone name hash string seed
+                    random.seed(hash(log_entry.get("Zone", "Default")))
+                    log_entry["X"] = random.randint(10, 90)
+                    log_entry["Y"] = random.randint(10, 90)
+                    parsed_logs.append(log_entry)
+                    
+        if parsed_logs:
+            return pd.DataFrame(parsed_logs)
+    except Exception as parse_error:
+        st.sidebar.error(f"Failed to scan site_events.txt: {str(parse_error)}")
+    return None
+
+# Attempt dynamic data sync on initial application initialization or manual refresh trigger
+parsed_df = fetch_and_parse_site_events()
+
+if parsed_df is not None:
+    st.session_state.event_logs = parsed_df
+elif "event_logs" not in st.session_state:
+    # Fallback default initial row if cloud directory item cannot be read yet
     st.session_state.event_logs = pd.DataFrame([
         {"Timestamp": "2026-06-25 09:15", "Zone": "Area A", "Violation": "Missing Hard Hat", "Confidence": "88%", "X": 45, "Y": 65},
     ])
-
 # 3-Column Layout Grid
 col_video, col_logs, col_genai = st.columns([4, 3, 4])
 
