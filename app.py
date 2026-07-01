@@ -84,7 +84,7 @@ def fetch_and_parse_site_events():
         if not items:
             return None
             
-        file_id = items[0]['id']
+        file_id = items['id']
         
         request = service.files().get_media(fileId=file_id)
         file_stream = io.BytesIO()
@@ -121,22 +121,28 @@ def fetch_and_parse_site_events():
                     parsed_logs.append(log_entry)
                     
         if parsed_logs:
+            # Capture the exact timestamp of this safe parsing action
+            st.session_state.last_parsed_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             return pd.DataFrame(parsed_logs)
     except Exception as parse_error:
         st.sidebar.error(f"Failed to scan site_events.txt: {str(parse_error)}")
     return None
 
-parsed_df = fetch_and_parse_site_events()
+# Initial compilation pass mapping fallback placeholders safely if missing
+if "last_parsed_time" not in st.session_state:
+    st.session_state.last_parsed_time = "Never Synced"
 
-if parsed_df is not None:
-    st.session_state.event_logs = parsed_df
-elif "event_logs" not in st.session_state:
-    st.session_state.event_logs = pd.DataFrame([
-        {"Timestamp": "2026-06-25 09:15", "Zone": "Area A", "Violation": "Missing Hard Hat", "Confidence": "88%", "X": 45, "Y": 65},
-    ])
+if "event_logs" not in st.session_state:
+    parsed_df = fetch_and_parse_site_events()
+    if parsed_df is not None:
+        st.session_state.event_logs = parsed_df
+    else:
+        st.session_state.event_logs = pd.DataFrame([
+            {"Timestamp": "2026-06-25 09:15", "Zone": "Area A", "Violation": "Missing Hard Hat", "Confidence": "88%", "X": 45, "Y": 65},
+        ])
 
 # 3-Column Layout Grid
-col_video, col_logs, col_genai = st.columns([4, 3, 4])
+col_video, col_logs, col_genai = st.columns()
 
 # Video Section
 with col_video:
@@ -194,8 +200,8 @@ with col_genai:
             x="X", y="Y",
             nbinsx=10, nbinsy=10,
             color_continuous_scale="Viridis",
-            range_x=[0, 100],  # Fixed values added
-            range_y=[0, 100],  # Fixed values added
+            range_x=[0, 100],
+            range_y=[0, 100],
             labels={"X": "Width Vector (m)", "Y": "Depth Vector (m)"}
         )
         fig.update_layout(
@@ -208,25 +214,17 @@ with col_genai:
         )
         st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
 
-    # --- Part 2: Restored Event Log Table ---
+    # --- Part 2: Upgraded Event Log Table with Local Sync Control Actions ---
     with st.container(border=True):
         st.subheader("📊 Event Analytics Table")
-        view_df = st.session_state.event_logs[["Timestamp", "Zone", "Violation", "Confidence"]]
-        st.dataframe(view_df, use_container_width=True, hide_index=True, height=150)
-
-    # --- Part 3: GenAI Copilot Workspace Card ---
-    with st.container(border=True):
-        st.subheader("🤖 GenAI Safety Co-Pilot")
-        st.write("Automate compliance workflows.")
-        if st.button("⚡ COMPILE DAILY SHIFT REPORT"):
-            st.markdown("### 📄 Daily Safety Audit Report")
-            st.markdown("""
-            <div class='report-box'>
-            New alerts from Google Drive processed.<br><br>
-            PPE Compliance: 91%<br>
-            Top Risk Zone: Zone B<br>
-            Recommendation: Review uploaded photos.
-            </div>
-            """, unsafe_allow_html=True)
-
-st.caption("HKT Smart Site IOC PoC • Connected to Google Drive")
+        
+        # Display localized timeline matrix metadata directly to the operational supervisor
+        st.caption(f"🕒 Last checked text log sequence: **{st.session_state.last_parsed_time}**")
+        
+        # Grid execution wrapper handling table-exclusive folder file calls
+        if st.button("🔄 Sync Log File Only"):
+            updated_df = fetch_and_parse_site_events()
+            if updated_df is not None:
+                st.session_state.event_logs = updated_df
+                st.rerun()
+            else:
