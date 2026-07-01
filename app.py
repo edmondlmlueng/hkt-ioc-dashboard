@@ -113,7 +113,7 @@ elif "event_logs" not in st.session_state:
     ])
 
 # 3-Column Layout Grid
-col_video, col_logs, col_genai = st.columns()
+col_video, col_logs, col_genai = st.columns([4, 3, 4])
 
 # Video Section
 with col_video:
@@ -194,7 +194,7 @@ with col_genai:
         </div>
         """, unsafe_allow_html=True)
 
-    # --- Part 2: Spatial Alert Heatmap Card (FIXED INDENTATION HERE) ---
+    # --- Part 2: Spatial Alert Heatmap Card ---
     with st.container(border=True):
         st.subheader("🗺️ Zone Violation Spatial Heatmap")
         fig = px.density_heatmap(
