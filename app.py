@@ -31,10 +31,10 @@ st.markdown("""
     div[data-testid="stMetricValue"] { font-size: 26px !important; color: #00C2FF !important; font-weight: 700; }
     h1, h2, h3, h4 { margin-bottom: 0.2rem !important; }
     
-    /* Equipment Status Style Blocks */
-    .status-card { background-color: #111A2E; padding: 10px 15px; border-radius: 6px; border: 1px solid #1E2D4A; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
-    .badge-online { background-color: rgba(0, 224, 150, 0.15); color: #00E096; padding: 3px 8px; border-radius: 4px; font-weight: bold; font-size: 11px; border: 1px solid #00E096; }
-    .badge-warning { background-color: rgba(255, 170, 0, 0.15); color: #FFAA00; padding: 3px 8px; border-radius: 4px; font-weight: bold; font-size: 11px; border: 1px solid #FFAA00; }
+    /* Equipment Status Style Blocks inside Sidebar */
+    .status-card { background-color: #111A2E; padding: 10px 12px; border-radius: 6px; border: 1px solid #1E2D4A; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+    .badge-online { background-color: rgba(0, 224, 150, 0.15); color: #00E096; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 10px; border: 1px solid #00E096; }
+    .badge-warning { background-color: rgba(255, 170, 0, 0.15); color: #FFAA00; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 10px; border: 1px solid #FFAA00; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -42,18 +42,41 @@ st.title("🛡️ HKT Smart Site Integrated Operations Centre (IOC)")
 st.subheader("Real-Time Safety Compliance & Analytics Terminal")
 st.markdown("---")
 
-# Sidebar
+# Sidebar Layout with Telemetry & Infrastructure Blocks
 with st.sidebar:
     st.header("Site Telemetry")
     st.metric("Active Cameras", "4 / 4")
     st.metric("Alert Status", "ALARM ACTIVE", "-2 Violations")
     st.info("Location: Kowloon District, HK")
+    
+    st.markdown("---")
+    
+    # Infrastructure & Equipment Status Section
+    st.header("🖥️ Device Infrastructure")
+    st.markdown("""
+    <div class="status-card">
+        <div><strong>☁️ Drive Sync Server</strong><br><small style='color:#8A99AD;'>site_events.txt</small></div>
+        <span class="badge-online">CONNECTED</span>
+    </div>
+    <div class="status-card">
+        <div><strong>📸 Site Cam-01</strong><br><small style='color:#8A99AD;'>Area A Excavation</small></div>
+        <span class="badge-online">ONLINE</span>
+    </div>
+    <div class="status-card">
+        <div><strong>📸 Site Cam-02</strong><br><small style='color:#8A99AD;'>Zone B Scaffold</small></div>
+        <span class="badge-warning">LAGGING</span>
+    </div>
+    <div class="status-card">
+        <div><strong>🖥️ HKT Compute Core</strong><br><small style='color:#8A99AD;'>Analytics Hub Node</small></div>
+        <span class="badge-online">ACTIVE</span>
+    </div>
+    """, unsafe_allow_html=True)
 
 # --- Automated Google Drive Text Parser Logic ---
 def fetch_and_parse_site_events():
     try:
         results = service.files().list(
-            q=f"'{FOLDER_ID}' in parents and name = 'site_events.txt' and trashed=false",
+            q=f"'{{FOLDER_ID}}' in parents and name = 'site_events.txt' and trashed=false",
             fields="files(id, name)"
         ).execute()
         
@@ -61,7 +84,7 @@ def fetch_and_parse_site_events():
         if not items:
             return None
             
-        file_id = items[0]['id']
+        file_id = items['id']
         
         request = service.files().get_media(fileId=file_id)
         file_stream = io.BytesIO()
@@ -113,13 +136,13 @@ elif "event_logs" not in st.session_state:
     ])
 
 # 3-Column Layout Grid
-col_video, col_logs, col_genai = st.columns([4, 3, 4])
+col_video, col_logs, col_genai = st.columns()
 
 # Video Section
 with col_video:
     with st.container(border=True):
         st.subheader("📹 CCTV Live Feed")
-        secure_nhk_stream = "https://livetv.fastv.jp/channel_assembly/69607EBD725E0F65BEE4/master.m3u8"
+        secure_nhk_stream = "https://fastv.jp"
         st.video(secure_nhk_stream, format="video/mp4", autoplay=True, muted=True, loop=True)
         st.caption("🔴 LIVE FEED CHANNEL: CONNECTED (Kowloon Hub Cam-01)")
 
@@ -163,29 +186,7 @@ with col_logs:
 
 # GenAI Section & Analytics Heatmap
 with col_genai:
-    # --- New Component: Connected Equipment & Drive Status Block ---
-    with st.container(border=True):
-        st.subheader("🖥️ Infrastructure & Equipment Status")
-        st.markdown("""
-        <div class="status-card">
-            <div><strong>☁️ HKT Google Workspace Cloud Directory</strong><br><small style='color:#8A99AD;'>Target: site_events.txt</small></div>
-            <span class="badge-online">CONNECTED</span>
-        </div>
-        <div class="status-card">
-            <div><strong>📸 Edge AI Site Camera (Cam-01)</strong><br><small style='color:#8A99AD;'>Zone: Area A Excavation</small></div>
-            <span class="badge-online">ONLINE</span>
-        </div>
-        <div class="status-card">
-            <div><strong>📸 Edge AI Site Camera (Cam-02)</strong><br><small style='color:#8A99AD;'>Zone: Zone B Scaffold</small></div>
-            <span class="badge-warning">HIGH LATENCY (135ms)</span>
-        </div>
-        <div class="status-card">
-            <div><strong>🖥️ Integrated Operations Analytical Core Host</strong><br><small style='color:#8A99AD;'>Node Server Cluster Hub</small></div>
-            <span class="badge-online">ACTIVE</span>
-        </div>
-        """, unsafe_allow_html=True)
-
-    # --- Part 2: Spatial Alert Heatmap Card ---
+    # --- Part 1: Spatial Alert Heatmap Card ---
     with st.container(border=True):
         st.subheader("🗺️ Zone Violation Spatial Heatmap")
         fig = px.density_heatmap(
@@ -193,8 +194,8 @@ with col_genai:
             x="X", y="Y",
             nbinsx=10, nbinsy=10,
             color_continuous_scale="Viridis",
-            range_x=[0, 100],
-            range_y=[0, 100],
+            range_x=,
+            range_y=,
             labels={"X": "Width Vector (m)", "Y": "Depth Vector (m)"}
         )
         fig.update_layout(
@@ -207,13 +208,13 @@ with col_genai:
         )
         st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
 
-    # --- Part 3: Restored Event Log Table ---
+    # --- Part 2: Restored Event Log Table ---
     with st.container(border=True):
         st.subheader("📊 Event Analytics Table")
         view_df = st.session_state.event_logs[["Timestamp", "Zone", "Violation", "Confidence"]]
         st.dataframe(view_df, use_container_width=True, hide_index=True, height=150)
 
-    # --- Part 4: GenAI Copilot Workspace Card ---
+    # --- Part 3: GenAI Copilot Workspace Card ---
     with st.container(border=True):
         st.subheader("🤖 GenAI Safety Co-Pilot")
         st.write("Automate compliance workflows.")
@@ -228,3 +229,4 @@ with col_genai:
             </div>
             """, unsafe_allow_html=True)
 
+st.caption("HKT Smart Site IOC PoC • Connected to Google Drive")
