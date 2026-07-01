@@ -59,7 +59,7 @@ with col_video:
         st.subheader("📹 CCTV Live Feed")
         
         # Secure production HLS (.m3u8) feed stream link
-        secure_nhk_stream = "https://media-tyo.hls.nhkworld.jp/hls/w/live/master.m3u8"
+        secure_nhk_stream = "https://livetv.fastv.jp/channel_assembly/69607EBD725E0F65BEE4/master.m3u8"
         
         st.video(
             secure_nhk_stream,
