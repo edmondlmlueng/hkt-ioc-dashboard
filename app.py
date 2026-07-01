@@ -6,6 +6,9 @@ import pandas as pd
 from datetime import datetime
 import io
 
+# 1. MUST BE FIRST STREAMLIT COMMAND
+st.set_page_config(page_title="HKT Smart Site IOC", page_icon="🛡️", layout="wide")
+
 FOLDER_ID = "1STpOEXxtgMvb-Ova_UrMF9E6CNLJCoAR"
 
 @st.cache_resource
@@ -15,8 +18,6 @@ def get_drive_service():
     return build('drive', 'v3', credentials=creds)
 
 service = get_drive_service()
-
-st.set_page_config(page_title="HKT Smart Site IOC", page_icon="🛡️", layout="wide")
 
 st.markdown("""
     <style>
@@ -45,12 +46,13 @@ with col_video:
     st.info("Demo Mode - Big Buck Bunny Test Stream")
     st.image("https://picsum.photos/id/1015/800/450", use_container_width=True, caption="Live Feed (Demo)")
 
-# Google Drive Alerts with Media Download
+# Google Drive Alerts + Restored Event Log
 with col_logs:
-    st.header("🚨 Latest Alerts from Google Drive")
+    st.header("🚨 Latest Alerts & Event Log")
     if st.button("🔄 Refresh from Google Drive"):
         st.rerun()
     
+    # --- Part 1: Google Drive Photo Feed ---
     try:
         results = service.files().list(
             q=f"'{FOLDER_ID}' in parents and trashed=false",
@@ -79,6 +81,25 @@ with col_logs:
             st.info("No alert photos found yet.")
     except Exception as e:
         st.error(f"Error: {str(e)}")
+
+    # --- Part 2: Restored Event Log Table & Simulator ---
+    st.markdown("### 📊 Event Analytics")
+    if "event_logs" not in st.session_state:
+        st.session_state.event_logs = pd.DataFrame([
+            {"Timestamp": "2026-06-25 09:15", "Zone": "Area A", "Violation": "Missing Hard Hat", "Confidence": "88%"},
+        ])
+        
+    st.dataframe(st.session_state.event_logs, use_container_width=True, hide_index=True)
+    
+    if st.button("Simulate New Alert"):
+        new_alert = {
+            "Timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "Zone": "Zone B",
+            "Violation": "Intrusion Detected",
+            "Confidence": "95%"
+        }
+        st.session_state.event_logs = pd.concat([st.session_state.event_logs, pd.DataFrame([new_alert])], ignore_index=True)
+        st.rerun()
 
 # GenAI Section
 with col_genai:
