@@ -60,7 +60,7 @@ with col_video:
         
         # Extracted active HLS/M3U8 network endpoints from the repository playlist structure
         # This streams live multi-bitrate data mimicking an operational RTSP pipeline
-        live_stream_endpoint = "https://live-video.net"
+        live_stream_endpoint = "http://58.82.168.138:5002/hdgd06.m3u8?token=guoziyun&gid=hdgd06&channel=zhongying"
         
         st.video(
             live_stream_endpoint,
