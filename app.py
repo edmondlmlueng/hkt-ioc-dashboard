@@ -39,8 +39,34 @@ col_video, col_logs, col_genai = st.columns([4, 3, 4])
 # Video Section
 with col_video:
     st.header("📹 CCTV Live Feed")
-    st.info("Demo Mode - Big Buck Bunny Test Stream")
-    st.image("https://picsum.photos/id/1015/800/450", use_container_width=True, caption="Live Feed (Demo)")
+    video_frame = st.empty()
+    video_status = st.empty()
+    
+    st.info("🔴 Live - North Gate Construction Site (Demo)")
+    
+    # List of realistic construction site images (you can add more)
+    demo_images = [
+        "https://picsum.photos/id/1015/800/450",   # Mountain construction
+        "https://picsum.photos/id/133/800/450",    # Site view
+        "https://picsum.photos/id/201/800/450",    # Crane site
+        "https://picsum.photos/id/251/800/450"     # Worker on site
+    ]
+    
+    if "image_index" not in st.session_state:
+        st.session_state.image_index = 0
+    
+    # Auto refresh every 3 seconds
+    image_placeholder = st.empty()
+    image_placeholder.image(
+        demo_images[st.session_state.image_index], 
+        use_container_width=True, 
+        caption=f"North Gate - Live Feed (Updated {datetime.now().strftime('%H:%M:%S')})"
+    )
+    
+    # Simulate live update
+    if st.button("🔄 Refresh Feed"):
+        st.session_state.image_index = (st.session_state.image_index + 1) % len(demo_images)
+        st.rerun()
 
 # Logs Section
 with col_logs:
