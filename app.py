@@ -9,7 +9,7 @@ st.subheader("Real-Time Safety Compliance & Analytics Terminal")
 
 st.success("✅ Dashboard is running!")
 
-col1, col2, col3 = st.columns([4, 3, 3])
+col1, col2 = st.columns([3, 2])
 
 with col1:
     st.header("📹 CCTV Live Feed")
@@ -27,12 +27,5 @@ with col2:
         new = {"Time": datetime.now().strftime("%H:%M"), "Zone": "Zone B", "Event": "PPE Violation"}
         st.session_state.logs = pd.concat([st.session_state.logs, pd.DataFrame([new])], ignore_index=True)
         st.rerun()
-
-with col3:
-    st.header("🤖 GenAI Co-Pilot")
-    if st.button("⚡ Generate Daily Report"):
-        st.markdown("### 📄 Daily Report")
-        st.success("PPE Compliance: 94%")
-        st.write("Recommendation: Check Zone B")
 
 st.caption("HKT IOC PoC - Simple Version")
