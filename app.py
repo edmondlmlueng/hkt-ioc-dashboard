@@ -65,17 +65,20 @@ with col_video:
     with col1:
         if st.button("▶️ Start Live Feed"):
             st.session_state.video_running = True
-            video_status.success("Live feed started (Demo Mode)")
+            video_status.success("✅ Live feed started (Demo Stream)")
     with col2:
         if st.button("⏹️ Stop Live Feed"):
             st.session_state.video_running = False
             video_status.info("Feed stopped")
 
-    # Display frame or placeholder
     if st.session_state.video_running:
-        video_frame.image("https://picsum.photos/id/1015/800/450", use_container_width=True, caption="Live CCTV Feed - North Gate (Demo)")
+        video_frame.image("https://picsum.photos/id/1015/800/450", 
+                         use_container_width=True, 
+                         caption="Live CCTV Feed - North Gate (Demo)")
     else:
-        video_frame.image("https://picsum.photos/id/1015/800/450", use_container_width=True, caption="CCTV Feed - Click Start to Activate")
+        video_frame.image("https://picsum.photos/id/1015/800/450", 
+                         use_container_width=True, 
+                         caption="Click 'Start Live Feed' to activate RTSP stream")
 
 # Logs Section
 with col_logs:
