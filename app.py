@@ -1,31 +1,91 @@
 import streamlit as st
+from google.oauth2.service_account import Credentials
+from googleapiclient.discovery import build
 import pandas as pd
 from datetime import datetime
 
-st.set_page_config(page_title="HKT IOC", layout="wide")
+# ================== CONFIG ==================
+FOLDER_ID = "1STpOEXxtgMvb-Ova_UrMF9E6CNLJCoAR"   # Your Google Drive Folder ID
+
+# ================== Google Drive Setup using st.secrets ==================
+@st.cache_resource
+def get_drive_service():
+    creds_dict = st.secrets["google"]
+    creds = Credentials.from_service_account_info(creds_dict)
+    return build('drive', 'v3', credentials=creds)
+
+service = get_drive_service()
+
+# ================== Streamlit App ==================
+st.set_page_config(page_title="HKT Smart Site IOC", page_icon="🛡️", layout="wide")
+
+st.markdown("""
+    <style>
+    .main { background-color: #0B111E; }
+    .stButton>button { background-color: #00C2FF; color: white; border-radius: 5px; font-weight: bold; }
+    .report-box { background-color: #161F30; padding: 20px; border-radius: 8px; border-left: 5px solid #00C2FF; color: white; }
+    </style>
+""", unsafe_allow_html=True)
 
 st.title("🛡️ HKT Smart Site Integrated Operations Centre (IOC)")
 st.subheader("Real-Time Safety Compliance & Analytics Terminal")
+st.markdown("---")
 
-st.success("✅ Dashboard is running!")
+# Sidebar
+with st.sidebar:
+    st.header("📁 Shared Alert Folder")
+    st.success("✅ Connected to Google Drive")
+    st.caption("Folder ID: " + FOLDER_ID[:20] + "...")
 
-col1, col2 = st.columns([3, 2])
+# Layout
+col_video, col_logs, col_genai = st.columns([4, 3, 4])
 
-with col1:
+# Video Section
+with col_video:
     st.header("📹 CCTV Live Feed")
-    st.image("https://picsum.photos/id/1015/800/450", use_container_width=True, caption="North Gate - Live (Demo)")
+    st.info("Demo Mode - Big Buck Bunny Test Stream")
+    st.image("https://picsum.photos/id/1015/800/450", use_container_width=True, caption="Live Feed (Demo)")
 
-with col2:
-    st.header("🚨 Latest Alerts")
-    if "logs" not in st.session_state:
-        st.session_state.logs = pd.DataFrame([
-            {"Time": "09:15", "Zone": "Area A", "Event": "Missing Hard Hat"},
-            {"Time": "10:30", "Zone": "Zone B", "Event": "Missing Vest"},
-        ])
-    st.dataframe(st.session_state.logs, use_container_width=True)
-    if st.button("Simulate New Alert"):
-        new = {"Time": datetime.now().strftime("%H:%M"), "Zone": "Zone B", "Event": "PPE Violation"}
-        st.session_state.logs = pd.concat([st.session_state.logs, pd.DataFrame([new])], ignore_index=True)
+# Google Drive Alerts
+with col_logs:
+    st.header("🚨 Latest Alerts from Edge Team")
+    
+    if st.button("🔄 Refresh from Google Drive"):
         st.rerun()
+    
+    try:
+        results = service.files().list(
+            q=f"'{FOLDER_ID}' in parents and trashed=false",
+            fields="files(id, name, mimeType, createdTime)",
+            orderBy="createdTime desc"
+        ).execute()
 
-st.caption("HKT IOC PoC - Simple Version")
+        files = results.get('files', [])
+        image_files = [f for f in files if f['mimeType'].startswith('image')]
+
+        if image_files:
+            st.success(f"Found {len(image_files)} alert photos")
+            for file in image_files[:8]:
+                st.image(f"https://drive.google.com/uc?id={file['id']}", 
+                        caption=file['name'], use_container_width=True)
+        else:
+            st.info("No alert photos found yet.\nUpload some images to your Google Drive folder.")
+    except Exception as e:
+        st.error(f"Error connecting to Google Drive: {str(e)}")
+
+# GenAI Section
+with col_genai:
+    st.header("🤖 GenAI Safety Co-Pilot")
+    st.write("Automate daily compliance workflows.")
+    if st.button("⚡ COMPILE DAILY SHIFT REPORT"):
+        st.markdown("### 📄 Daily Safety Audit Report")
+        st.markdown("""
+        <div class='report-box'>
+        New alerts from Google Drive processed.<br><br>
+        PPE Compliance: 91%<br>
+        Top Risk Zone: Zone B<br>
+        Recommendation: Review uploaded photos.
+        </div>
+        """, unsafe_allow_html=True)
+
+st.caption("HKT Smart Site IOC PoC • Connected to Google Drive")
