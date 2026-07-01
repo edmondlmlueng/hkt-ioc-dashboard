@@ -1,22 +1,7 @@
 import streamlit as st
-from google.oauth2.service_account import Credentials
-from googleapiclient.discovery import build
 import pandas as pd
 from datetime import datetime
 
-# ================== CONFIG ==================
-FOLDER_ID = "1STpOEXxtgMvb-Ova_UrMF9E6CNLJCoAR"   # Your Google Drive Folder ID
-
-# ================== Google Drive Setup using st.secrets ==================
-@st.cache_resource
-def get_drive_service():
-    creds_dict = st.secrets["google"]
-    creds = Credentials.from_service_account_info(creds_dict)
-    return build('drive', 'v3', credentials=creds)
-
-service = get_drive_service()
-
-# ================== Streamlit App ==================
 st.set_page_config(page_title="HKT Smart Site IOC", page_icon="🛡️", layout="wide")
 
 st.markdown("""
@@ -33,59 +18,71 @@ st.markdown("---")
 
 # Sidebar
 with st.sidebar:
-    st.header("📁 Shared Alert Folder")
-    st.success("✅ Connected to Google Drive")
-    st.caption("Folder ID: " + FOLDER_ID[:20] + "...")
+    st.header("Site Telemetry")
+    st.metric("Active Cameras", "4 / 4")
+    st.metric("Alert Status", "ALARM ACTIVE", "-2 Violations")
+    st.info("Location: Kowloon District, HK")
 
-# Layout
+# Session State
+if "event_logs" not in st.session_state:
+    st.session_state.event_logs = pd.DataFrame([
+        {"Timestamp": "2026-06-25 09:15", "Zone": "Area A", "Violation": "Missing Hard Hat", "Confidence": "88%"},
+        {"Timestamp": "2026-06-25 10:30", "Zone": "Zone B", "Violation": "Missing High-Vis Vest", "Confidence": "92%"},
+    ])
+
 col_video, col_logs, col_genai = st.columns([4, 3, 4])
 
-# Video Section
+# Video Section (RTSP Demo)
 with col_video:
     st.header("📹 CCTV Live Feed")
-    st.info("Demo Mode - Big Buck Bunny Test Stream")
-    st.image("https://picsum.photos/id/1015/800/450", use_container_width=True, caption="Live Feed (Demo)")
+    video_frame = st.empty()
+    video_status = st.empty()
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("▶️ Start Live Feed"):
+            st.session_state.video_running = True
+            video_status.success("✅ Live feed started (Demo)")
+    with col2:
+        if st.button("⏹️ Stop Live Feed"):
+            st.session_state.video_running = False
+            video_status.info("Feed stopped")
 
-# Google Drive Alerts
+    if st.session_state.get("video_running", False):
+        st.image("https://picsum.photos/id/1015/800/450", use_container_width=True, caption="Live CCTV Feed - North Gate (Demo)")
+    else:
+        st.image("https://picsum.photos/id/1015/800/450", use_container_width=True, caption="Click 'Start Live Feed' to activate")
+
+# Logs Section
 with col_logs:
-    st.header("🚨 Latest Alerts from Edge Team")
+    st.header("📋 Live Incident Log")
+    st.dataframe(st.session_state.event_logs, use_container_width=True, hide_index=True)
     
-    if st.button("🔄 Refresh from Google Drive"):
+    if st.button("Simulate New Alert"):
+        new_alert = {
+            "Timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "Zone": "Material Storage",
+            "Violation": "Intrusion Detected",
+            "Confidence": "95%"
+        }
+        st.session_state.event_logs = pd.concat([st.session_state.event_logs, pd.DataFrame([new_alert])], ignore_index=True)
         st.rerun()
-    
-    try:
-        results = service.files().list(
-            q=f"'{FOLDER_ID}' in parents and trashed=false",
-            fields="files(id, name, mimeType, createdTime)",
-            orderBy="createdTime desc"
-        ).execute()
-
-        files = results.get('files', [])
-        image_files = [f for f in files if f['mimeType'].startswith('image')]
-
-        if image_files:
-            st.success(f"Found {len(image_files)} alert photos")
-            for file in image_files[:8]:
-                st.image(f"https://drive.google.com/uc?id={file['id']}", 
-                        caption=file['name'], use_container_width=True)
-        else:
-            st.info("No alert photos found yet.\nUpload some images to your Google Drive folder.")
-    except Exception as e:
-        st.error(f"Error connecting to Google Drive: {str(e)}")
 
 # GenAI Section
 with col_genai:
     st.header("🤖 GenAI Safety Co-Pilot")
-    st.write("Automate daily compliance workflows.")
+    st.write("Automate compliance workflows.")
+    
     if st.button("⚡ COMPILE DAILY SHIFT REPORT"):
+        st.info("📝 GenAI Report (Demo Mode)")
         st.markdown("### 📄 Daily Safety Audit Report")
         st.markdown("""
         <div class='report-box'>
-        New alerts from Google Drive processed.<br><br>
-        PPE Compliance: 91%<br>
-        Top Risk Zone: Zone B<br>
-        Recommendation: Review uploaded photos.
+        No major violations detected today.<br><br>
+        PPE Compliance Rate: 94%<br>
+        Top Risk Zone: Zone B Scaffold<br>
+        Recommendation: Increase helmet checks in Area A.
         </div>
         """, unsafe_allow_html=True)
 
-st.caption("HKT Smart Site IOC PoC • Connected to Google Drive")
+st.caption("HKT Smart Site IOC PoC • Cloud Version")
