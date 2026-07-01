@@ -22,21 +22,20 @@ def get_drive_service():
 service = get_drive_service()
 
 # Professional Dark Theme Overrides
-st.markdown("""
-    <style>
-    .main { background-color: #0B111E; color: #E2E8F0; }
-    .stButton>button { background-color: #00C2FF !important; color: #0B111E !important; border-radius: 6px; font-weight: bold; width: 100%; border: none; }
-    .stButton>button:hover { background-color: #00E0FF !important; }
-    .report-box { background-color: #161F30; padding: 20px; border-radius: 8px; border-left: 5px solid #00C2FF; color: white; }
-    div[data-testid="stMetricValue"] { font-size: 26px !important; color: #00C2FF !important; font-weight: 700; }
-    h1, h2, h3, h4 { margin-bottom: 0.2rem !important; }
-    </style>
-""", unsafe_allow_html=True)
 
-st.title("🛡️ HKT Smart Site Integrated Operations Centre (IOC)")
+
+
+st.markdown(
+    """
+    <div class="header-branded-container">
+        <img src="https://www.hkt.com/images/enterprises/hkt-enterprise-solutions.png" width="190">
+        <h1 style="margin:0; font-size:30px; font-weight:700; color:#FFFFFF;">Smart Site Integrated Operations Centre (IOC)</h1>
+    </div>
+    """, 
+    unsafe_allow_html=True
+)
 st.subheader("Real-Time Safety Compliance & Analytics Terminal")
 st.markdown("---")
-
 # Sidebar
 with st.sidebar:
     st.header("Site Telemetry")
