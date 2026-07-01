@@ -16,21 +16,34 @@ service = get_drive_service()
 
 st.set_page_config(page_title="HKT Smart Site IOC", page_icon="🛡️", layout="wide")
 
+st.markdown("""
+    <style>
+    .main { background-color: #0B111E; }
+    .stButton>button { background-color: #00C2FF; color: white; border-radius: 5px; font-weight: bold; }
+    .report-box { background-color: #161F30; padding: 20px; border-radius: 8px; border-left: 5px solid #00C2FF; color: white; }
+    </style>
+""", unsafe_allow_html=True)
+
 st.title("🛡️ HKT Smart Site Integrated Operations Centre (IOC)")
 st.subheader("Real-Time Safety Compliance & Analytics Terminal")
 st.markdown("---")
 
+# Sidebar
 with st.sidebar:
-    st.header("📁 Shared Alert Folder")
-    st.success("✅ Connected to Google Drive")
+    st.header("Site Telemetry")
+    st.metric("Active Cameras", "4 / 4")
+    st.metric("Alert Status", "ALARM ACTIVE", "-2 Violations")
+    st.info("Location: Kowloon District, HK")
 
 col_video, col_logs, col_genai = st.columns([4, 3, 4])
 
+# Video Section
 with col_video:
     st.header("📹 CCTV Live Feed")
-    st.info("Demo Mode")
+    st.info("Demo Mode - Big Buck Bunny Test Stream")
     st.image("https://picsum.photos/id/1015/800/450", use_container_width=True, caption="Live Feed (Demo)")
 
+# Google Drive Alerts
 with col_logs:
     st.header("🚨 Latest Alerts from Edge Team")
     if st.button("🔄 Refresh from Google Drive"):
@@ -56,14 +69,17 @@ with col_logs:
     except Exception as e:
         st.error(f"Error: {str(e)}")
 
+# GenAI Section
 with col_genai:
     st.header("🤖 GenAI Safety Co-Pilot")
+    st.write("Automate daily compliance workflows.")
     if st.button("⚡ COMPILE DAILY SHIFT REPORT"):
         st.markdown("### 📄 Daily Safety Audit Report")
         st.markdown("""
-        <div style='background-color: #161F30; padding: 20px; border-radius: 8px; border-left: 5px solid #00C2FF; color: white;'>
+        <div class='report-box'>
         New alerts from Google Drive processed.<br><br>
         PPE Compliance: 91%<br>
+        Top Risk Zone: Zone B<br>
         Recommendation: Review uploaded photos.
         </div>
         """, unsafe_allow_html=True)
