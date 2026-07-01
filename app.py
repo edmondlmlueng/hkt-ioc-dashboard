@@ -8,7 +8,8 @@ FOLDER_ID = "1STpOEXxtgMvb-Ova_UrMF9E6CNLJCoAR"
 
 @st.cache_resource
 def get_drive_service():
-    creds = Credentials.from_service_account_file("credentials.json")
+    creds_dict = st.secrets["google"]
+    creds = Credentials.from_service_account_info(creds_dict)
     return build('drive', 'v3', credentials=creds)
 
 service = get_drive_service()
@@ -50,7 +51,7 @@ with col_logs:
             for file in image_files[:8]:
                 st.image(f"https://drive.google.com/uc?id={file['id']}", caption=file['name'], use_container_width=True)
         else:
-            st.info("No photos found yet.")
+            st.info("No alert photos found yet.")
     except Exception as e:
         st.error(f"Error: {str(e)}")
 
