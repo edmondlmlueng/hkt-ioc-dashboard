@@ -3,7 +3,7 @@ from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseDownload
 import pandas as pd
-import plotly.express as px  # FIX 1: Fixed broken multi-line import syntax
+import plotly.express as px  
 from datetime import datetime
 import io
 import random
@@ -61,7 +61,7 @@ def fetch_and_parse_site_events():
         if not items:
             return None
             
-        file_id = items[0]['id'] # Extract from list array element wrapper
+        file_id = items[0]['id'] 
         
         request = service.files().get_media(fileId=file_id)
         file_stream = io.BytesIO()
@@ -113,13 +113,13 @@ elif "event_logs" not in st.session_state:
     ])
 
 # 3-Column Layout Grid
-col_video, col_logs, col_genai = st.columns([4, 3, 4])
+col_video, col_logs, col_genai = st.columns()
 
 # Video Section
 with col_video:
     with st.container(border=True):
         st.subheader("📹 CCTV Live Feed")
-        secure_nhk_stream = "https://livetv.fastv.jp/channel_assembly/69607EBD725E0F65BEE4/master.m3u8"
+        secure_nhk_stream = "https://fastv.jp"
         st.video(secure_nhk_stream, format="video/mp4", autoplay=True, muted=True, loop=True)
         st.caption("🔴 LIVE FEED CHANNEL: CONNECTED (Kowloon Hub Cam-01)")
 
@@ -175,8 +175,6 @@ with col_genai:
     # --- Part 1: Connected Infrastructure Health Status Block ---
     with st.container(border=True):
         st.subheader("🖥️ Connected Hardware & Drive Status")
-        
-        # FIX 2: Restored and cleanly closed the truncated HTML markup tags
         st.markdown("""
         <div class="status-card">
             <div><strong>☁️ Google Cloud Workspace Directory</strong><br><small style='color:#8A99AD;'>Path: root/site_events.txt</small></div>
@@ -196,7 +194,7 @@ with col_genai:
         </div>
         """, unsafe_allow_html=True)
 
-    # --- Part 2: Spatial Alert Heatmap Card ---
+    # --- Part 2: Spatial Alert Heatmap Card (FIXED INDENTATION HERE) ---
     with st.container(border=True):
         st.subheader("🗺️ Zone Violation Spatial Heatmap")
         fig = px.density_heatmap(
@@ -222,3 +220,6 @@ with col_genai:
 
     # --- Part 4: GenAI Copilot Workspace Card ---
     with st.container(border=True):
+        st.subheader("🤖 GenAI Safety Co-Pilot")
+        st.write("Automate compliance workflows.")
+        if st.button("⚡ COMPILE DAILY SHIFT REPORT"):
