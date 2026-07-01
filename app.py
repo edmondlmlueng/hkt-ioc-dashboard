@@ -1,18 +1,14 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime
+import os
 
-st.set_page_config(
-    page_title="HKT Smart Site IOC",
-    page_icon="🛡️",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
+st.set_page_config(page_title="HKT Smart Site IOC", page_icon="🛡️", layout="wide")
 
 st.markdown("""
     <style>
     .main { background-color: #0B111E; }
-    .stButton>button { background-color: #00C2FF; color: white; border-radius: 5px; font-weight: bold; }
+    .stButton>button { background-color: #00C2FF; color: white; }
     .report-box { background-color: #161F30; padding: 20px; border-radius: 8px; border-left: 5px solid #00C2FF; color: white; }
     </style>
 """, unsafe_allow_html=True)
@@ -23,10 +19,9 @@ st.markdown("---")
 
 # Sidebar
 with st.sidebar:
-    st.header("Site Telemetry")
-    st.metric("Active Cameras", "4 / 4")
-    st.metric("Alert Status", "ALARM ACTIVE", "-2 Violations")
-    st.info("Location: Kowloon District, HK")
+    st.header("📁 Shared Alert Folder")
+    st.write("Google Drive Folder Connected")
+    st.caption("https://drive.google.com/drive/folders/1STpOEXxtgMvb-Ova_UrMF9E6CNLJCoAR")
 
 # Session State
 if "event_logs" not in st.session_state:
@@ -36,65 +31,43 @@ if "event_logs" not in st.session_state:
 
 col_video, col_logs, col_genai = st.columns([4, 3, 4])
 
-# Video Section
+# Video Section (Demo)
 with col_video:
     st.header("📹 CCTV Live Feed")
-    video_frame = st.empty()
-    video_status = st.empty()
-    
-    st.info("🔴 Live - North Gate Construction Site (Demo)")
-    
-    # List of realistic construction site images (you can add more)
-    demo_images = [
-        "https://picsum.photos/id/1015/800/450",   # Mountain construction
-        "https://picsum.photos/id/133/800/450",    # Site view
-        "https://picsum.photos/id/201/800/450",    # Crane site
-        "https://picsum.photos/id/251/800/450"     # Worker on site
-    ]
-    
-    if "image_index" not in st.session_state:
-        st.session_state.image_index = 0
-    
-    # Auto refresh every 3 seconds
-    image_placeholder = st.empty()
-    image_placeholder.image(
-        demo_images[st.session_state.image_index], 
-        use_container_width=True, 
-        caption=f"North Gate - Live Feed (Updated {datetime.now().strftime('%H:%M:%S')})"
-    )
-    
-    # Simulate live update
-    if st.button("🔄 Refresh Feed"):
-        st.session_state.image_index = (st.session_state.image_index + 1) % len(demo_images)
-        st.rerun()
+    st.info("Demo Mode - Big Buck Bunny Test Stream")
+    st.image("https://picsum.photos/id/1015/800/450", use_container_width=True, caption="Live Feed (Demo)")
 
-# Logs Section
+# Alerts from Google Drive
 with col_logs:
-    st.header("📋 Live Incident Log")
-    st.dataframe(st.session_state.event_logs, use_container_width=True, hide_index=True)
-    if st.button("Simulate New Alert"):
+    st.header("🚨 Latest Alerts from Edge Team")
+    refresh = st.button("🔄 Refresh from Google Drive")
+
+    if refresh:
+        st.info("Scanning Google Drive folder... (Demo Mode)")
+        # In real version, we would list files from your folder
+        st.success("New alert received from Edge team!")
+        
         new_alert = {
             "Timestamp": datetime.now().strftime("%Y-%m-%d %H:%M"),
             "Zone": "Zone B",
-            "Violation": "Intrusion Detected",
-            "Confidence": "95%"
+            "Violation": "Missing PPE",
+            "Confidence": "91%"
         }
         st.session_state.event_logs = pd.concat([st.session_state.event_logs, pd.DataFrame([new_alert])], ignore_index=True)
-        st.rerun()
 
-# GenAI Section
+    st.dataframe(st.session_state.event_logs, use_container_width=True, hide_index=True)
+
+# GenAI
 with col_genai:
     st.header("🤖 GenAI Safety Co-Pilot")
-    st.write("Automate daily compliance workflows.")
     if st.button("⚡ COMPILE DAILY SHIFT REPORT"):
         st.markdown("### 📄 Daily Safety Audit Report")
         st.markdown("""
         <div class='report-box'>
-        No major violations detected today.<br><br>
-        PPE Compliance Rate: 94%<br>
-        Top Risk Zone: Zone B Scaffold<br>
-        Recommendation: Increase helmet checks in Area A.
+        New alerts from Google Drive processed.<br><br>
+        PPE Compliance: 91%<br>
+        Recommendation: Review Zone B photos.
         </div>
         """, unsafe_allow_html=True)
 
-st.caption("HKT Smart Site IOC PoC • Cloud Version")
+st.caption("HKT Smart Site IOC PoC • Connected to Google Drive")
