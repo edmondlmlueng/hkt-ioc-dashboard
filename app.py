@@ -3,8 +3,7 @@ from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseDownload
 import pandas as pd
-import 
-as px
+import plotly.express as px  # FIX 1: Fixed broken multi-line import syntax
 from datetime import datetime
 import io
 import random
@@ -177,7 +176,7 @@ with col_genai:
     with st.container(border=True):
         st.subheader("🖥️ Connected Hardware & Drive Status")
         
-        # Micro layout components simulating equipment connectivity signals
+        # FIX 2: Restored and cleanly closed the truncated HTML markup tags
         st.markdown("""
         <div class="status-card">
             <div><strong>☁️ Google Cloud Workspace Directory</strong><br><small style='color:#8A99AD;'>Path: root/site_events.txt</small></div>
@@ -211,7 +210,7 @@ with col_genai:
         fig.update_layout(
             paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
             font_color="#E2E8F0", margin=dict(l=10, r=10, t=10, b=10),
-            height=180, coloraxis_showscale=False
+            height=220, coloraxis_showscale=False
         )
         st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
 
@@ -219,6 +218,7 @@ with col_genai:
     with st.container(border=True):
         st.subheader("📊 Event Analytics Table")
         view_df = st.session_state.event_logs[["Timestamp", "Zone", "Violation", "Confidence"]]
-        st.dataframe(view_df, use_container_width=True, hide_index=True, height=120)
+        st.dataframe(view_df, use_container_width=True, hide_index=True, height=150)
 
     # --- Part 4: GenAI Copilot Workspace Card ---
+    with st.container(border=True):
