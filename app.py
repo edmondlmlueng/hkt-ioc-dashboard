@@ -1,8 +1,10 @@
 import streamlit as st
 from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
+from googleapiclient.http import MediaIoBaseDownload
 import pandas as pd
 from datetime import datetime
+import io
 
 FOLDER_ID = "1STpOEXxtgMvb-Ova_UrMF9E6CNLJCoAR"
 
@@ -28,7 +30,7 @@ st.title("🛡️ HKT Smart Site Integrated Operations Centre (IOC)")
 st.subheader("Real-Time Safety Compliance & Analytics Terminal")
 st.markdown("---")
 
-# Sidebar (Must-have)
+# Sidebar
 with st.sidebar:
     st.header("Site Telemetry")
     st.metric("Active Cameras", "4 / 4")
@@ -43,9 +45,9 @@ with col_video:
     st.info("Demo Mode - Big Buck Bunny Test Stream")
     st.image("https://picsum.photos/id/1015/800/450", use_container_width=True, caption="Live Feed (Demo)")
 
-# Event Logs + Google Drive Photos
+# Google Drive Alerts with Media Download
 with col_logs:
-    st.header("🚨 Latest Alerts from Google Drive + Event Log")
+    st.header("🚨 Latest Alerts from Google Drive")
     if st.button("🔄 Refresh from Google Drive"):
         st.rerun()
     
@@ -62,32 +64,21 @@ with col_logs:
         if image_files:
             st.success(f"Found {len(image_files)} alert photos")
             for file in image_files[:8]:
-                st.image(
-                    f"https://drive.google.com/uc?id={file['id']}&export=view", 
-                    caption=file['name'], 
-                    use_container_width=True
-                )
+                try:
+                    request = service.files().get_media(fileId=file['id'])
+                    file_stream = io.BytesIO()
+                    downloader = MediaIoBaseDownload(file_stream, request)
+                    done = False
+                    while done is False:
+                        status, done = downloader.next_chunk()
+                    file_stream.seek(0)
+                    st.image(file_stream, caption=file['name'], use_container_width=True)
+                except Exception as img_err:
+                    st.warning(f"Could not render {file['name']}: {str(img_err)}")
         else:
             st.info("No alert photos found yet.")
     except Exception as e:
-        st.error(f"Error loading photos: {str(e)}")
-
-    # Event Log
-    if "event_logs" not in st.session_state:
-        st.session_state.event_logs = pd.DataFrame([
-            {"Timestamp": "2026-06-25 09:15", "Zone": "Area A", "Violation": "Missing Hard Hat", "Confidence": "88%"},
-        ])
-    st.dataframe(st.session_state.event_logs, use_container_width=True, hide_index=True)
-    
-    if st.button("Simulate New Alert"):
-        new_alert = {
-            "Timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            "Zone": "Zone B",
-            "Violation": "Intrusion Detected",
-            "Confidence": "95%"
-        }
-        st.session_state.event_logs = pd.concat([st.session_state.event_logs, pd.DataFrame([new_alert])], ignore_index=True)
-        st.rerun()
+        st.error(f"Error: {str(e)}")
 
 # GenAI Section
 with col_genai:
