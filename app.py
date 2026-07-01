@@ -51,7 +51,7 @@ if "event_logs" not in st.session_state:
     ])
 
 # 3-Column Layout Grid
-col_video, col_logs, col_genai = st.columns()
+col_video, col_logs, col_genai = st.columns([4, 3, 4])
 
 # Video Section
 with col_video:
@@ -59,7 +59,7 @@ with col_video:
         st.subheader("📹 CCTV Live Feed")
         
         # Secure production HLS (.m3u8) feed stream link
-        secure_nhk_stream = "https://media-tyo.hls.nhkworld.jp/hls/w/live/master.m3u8"
+        secure_nhk_stream = "https://nhkworld.jp"
         
         st.video(
             secure_nhk_stream,
@@ -115,6 +115,7 @@ with col_genai:
     with st.container(border=True):
         st.subheader("🗺️ Zone Violation Spatial Heatmap")
         
+        # Explicit ranges added here to fix the syntax crash
         fig = px.density_heatmap(
             st.session_state.event_logs, 
             x="X", 
@@ -122,8 +123,8 @@ with col_genai:
             nbinsx=10, 
             nbinsy=10,
             color_continuous_scale="Viridis",
-            range_x=,
-            range_y=,
+            range_x=[0, 100],
+            range_y=[0, 100],
             labels={"X": "Width Vector (m)", "Y": "Depth Vector (m)"}
         )
         fig.update_layout(
