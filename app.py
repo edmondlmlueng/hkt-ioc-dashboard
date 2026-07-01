@@ -76,7 +76,7 @@ with st.sidebar:
 def fetch_and_parse_site_events():
     try:
         results = service.files().list(
-            q=f"'{{FOLDER_ID}}' in parents and name = 'site_events.txt' and trashed=false",
+            q=f"'{FOLDER_ID}' in parents and name = 'site_events.txt' and trashed=false",
             fields="files(id, name)"
         ).execute()
         
@@ -84,7 +84,7 @@ def fetch_and_parse_site_events():
         if not items:
             return None
             
-        file_id = items['id']
+        file_id = items[0]['id']
         
         request = service.files().get_media(fileId=file_id)
         file_stream = io.BytesIO()
@@ -136,7 +136,7 @@ elif "event_logs" not in st.session_state:
     ])
 
 # 3-Column Layout Grid
-col_video, col_logs, col_genai = st.columns()
+col_video, col_logs, col_genai = st.columns([4, 3, 4])
 
 # Video Section
 with col_video:
@@ -194,8 +194,8 @@ with col_genai:
             x="X", y="Y",
             nbinsx=10, nbinsy=10,
             color_continuous_scale="Viridis",
-            range_x=,
-            range_y=,
+            range_x=[0, 100],  # Fixed values added
+            range_y=[0, 100],  # Fixed values added
             labels={"X": "Width Vector (m)", "Y": "Depth Vector (m)"}
         )
         fig.update_layout(
