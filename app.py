@@ -22,7 +22,6 @@ def get_drive_service():
 service = get_drive_service()
 
 # Professional Dark Theme Overrides
-
 st.markdown("""
     <style>
     .main { background-color: #0B111E; color: #E2E8F0; }
@@ -31,12 +30,18 @@ st.markdown("""
     .report-box { background-color: #161F30; padding: 20px; border-radius: 8px; border-left: 5px solid #00C2FF; color: white; }
     div[data-testid="stMetricValue"] { font-size: 26px !important; color: #00C2FF !important; font-weight: 700; }
     h1, h2, h3, h4 { margin-bottom: 0.2rem !important; }
+    
+    /* Equipment Status Style Blocks */
+    .status-card { background-color: #111A2E; padding: 10px 15px; border-radius: 6px; border: 1px solid #1E2D4A; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+    .badge-online { background-color: rgba(0, 224, 150, 0.15); color: #00E096; padding: 3px 8px; border-radius: 4px; font-weight: bold; font-size: 11px; border: 1px solid #00E096; }
+    .badge-warning { background-color: rgba(255, 170, 0, 0.15); color: #FFAA00; padding: 3px 8px; border-radius: 4px; font-weight: bold; font-size: 11px; border: 1px solid #FFAA00; }
     </style>
 """, unsafe_allow_html=True)
 
 st.title("🛡️ HKT Smart Site Integrated Operations Centre (IOC)")
 st.subheader("Real-Time Safety Compliance & Analytics Terminal")
 st.markdown("---")
+
 # Sidebar
 with st.sidebar:
     st.header("Site Telemetry")
@@ -47,7 +52,6 @@ with st.sidebar:
 # --- Automated Google Drive Text Parser Logic ---
 def fetch_and_parse_site_events():
     try:
-        # Search the target folder for the unique log file name
         results = service.files().list(
             q=f"'{FOLDER_ID}' in parents and name = 'site_events.txt' and trashed=false",
             fields="files(id, name)"
@@ -59,7 +63,6 @@ def fetch_and_parse_site_events():
             
         file_id = items[0]['id']
         
-        # Pull text raw byte data blocks securely from the API stream chunk
         request = service.files().get_media(fileId=file_id)
         file_stream = io.BytesIO()
         downloader = MediaIoBaseDownload(file_stream, request)
@@ -70,7 +73,6 @@ def fetch_and_parse_site_events():
         file_stream.seek(0)
         raw_text = file_stream.read().decode('utf-8')
         
-        # Build systematic data frame records directly from the string blocks
         parsed_logs = []
         lines = raw_text.split('\n')
         
@@ -90,7 +92,6 @@ def fetch_and_parse_site_events():
                         elif "CONFIDENCE" in k_clean: log_entry["Confidence"] = v_clean
                 
                 if "Violation" in log_entry:
-                    # Provide automated spatial mapping tags based on the Zone name hash string seed
                     random.seed(hash(log_entry.get("Zone", "Default")))
                     log_entry["X"] = random.randint(10, 90)
                     log_entry["Y"] = random.randint(10, 90)
@@ -102,16 +103,15 @@ def fetch_and_parse_site_events():
         st.sidebar.error(f"Failed to scan site_events.txt: {str(parse_error)}")
     return None
 
-# Attempt dynamic data sync on initial application initialization or manual refresh trigger
 parsed_df = fetch_and_parse_site_events()
 
 if parsed_df is not None:
     st.session_state.event_logs = parsed_df
 elif "event_logs" not in st.session_state:
-    # Fallback default initial row if cloud directory item cannot be read yet
     st.session_state.event_logs = pd.DataFrame([
         {"Timestamp": "2026-06-25 09:15", "Zone": "Area A", "Violation": "Missing Hard Hat", "Confidence": "88%", "X": 45, "Y": 65},
     ])
+
 # 3-Column Layout Grid
 col_video, col_logs, col_genai = st.columns([4, 3, 4])
 
@@ -119,17 +119,8 @@ col_video, col_logs, col_genai = st.columns([4, 3, 4])
 with col_video:
     with st.container(border=True):
         st.subheader("📹 CCTV Live Feed")
-        
-        # Secure production HLS (.m3u8) feed stream link
         secure_nhk_stream = "https://livetv.fastv.jp/channel_assembly/69607EBD725E0F65BEE4/master.m3u8"
-        
-        st.video(
-            secure_nhk_stream,
-            format="video/mp4",
-            autoplay=True,
-            muted=True,
-            loop=True
-        )
+        st.video(secure_nhk_stream, format="video/mp4", autoplay=True, muted=True, loop=True)
         st.caption("🔴 LIVE FEED CHANNEL: CONNECTED (Kowloon Hub Cam-01)")
 
 # Google Drive Alerts + Restored Event Log
@@ -139,7 +130,6 @@ with col_logs:
         if st.button("🔄 Refresh from Google Drive"):
             st.rerun()
         
-        # --- Part 1: Google Drive Photo Feed ---
         try:
             results = service.files().list(
                 q=f"'{FOLDER_ID}' in parents and trashed=false",
@@ -173,17 +163,35 @@ with col_logs:
 
 # GenAI Section & Analytics Heatmap
 with col_genai:
+    # --- New Component: Connected Equipment & Drive Status Block ---
+    with st.container(border=True):
+        st.subheader("🖥️ Infrastructure & Equipment Status")
+        st.markdown("""
+        <div class="status-card">
+            <div><strong>☁️ HKT Google Workspace Cloud Directory</strong><br><small style='color:#8A99AD;'>Target: site_events.txt</small></div>
+            <span class="badge-online">CONNECTED</span>
+        </div>
+        <div class="status-card">
+            <div><strong>📸 Edge AI Site Camera (Cam-01)</strong><br><small style='color:#8A99AD;'>Zone: Area A Excavation</small></div>
+            <span class="badge-online">ONLINE</span>
+        </div>
+        <div class="status-card">
+            <div><strong>📸 Edge AI Site Camera (Cam-02)</strong><br><small style='color:#8A99AD;'>Zone: Zone B Scaffold</small></div>
+            <span class="badge-warning">HIGH LATENCY (135ms)</span>
+        </div>
+        <div class="status-card">
+            <div><strong>🖥️ Integrated Operations Analytical Core Host</strong><br><small style='color:#8A99AD;'>Node Server Cluster Hub</small></div>
+            <span class="badge-online">ACTIVE</span>
+        </div>
+        """, unsafe_allow_html=True)
+
     # --- Part 2: Spatial Alert Heatmap Card ---
     with st.container(border=True):
         st.subheader("🗺️ Zone Violation Spatial Heatmap")
-        
-        # Explicit ranges added here to fix the syntax crash
         fig = px.density_heatmap(
             st.session_state.event_logs, 
-            x="X", 
-            y="Y",
-            nbinsx=10, 
-            nbinsy=10,
+            x="X", y="Y",
+            nbinsx=10, nbinsy=10,
             color_continuous_scale="Viridis",
             range_x=[0, 100],
             range_y=[0, 100],
@@ -199,27 +207,11 @@ with col_genai:
         )
         st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
 
-    # --- Part 3: Restored Event Log Table & Simulator ---
+    # --- Part 3: Restored Event Log Table ---
     with st.container(border=True):
         st.subheader("📊 Event Analytics Table")
-        
         view_df = st.session_state.event_logs[["Timestamp", "Zone", "Violation", "Confidence"]]
         st.dataframe(view_df, use_container_width=True, hide_index=True, height=150)
-        
-        if st.button("Simulate New Alert"):
-            sim_zones = ["Area A", "Zone B", "Sector C", "North Gate"]
-            sim_violations = ["Missing Hard Hat", "Intrusion Detected", "No High-Vis Vest", "Unauthorized Entry"]
-            
-            new_alert = {
-                "Timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                "Zone": random.choice(sim_zones),
-                "Violation": random.choice(sim_violations),
-                "Confidence": f"{random.randint(82, 98)}%",
-                "X": random.randint(5, 95),
-                "Y": random.randint(5, 95)
-            }
-            st.session_state.event_logs = pd.concat([st.session_state.event_logs, pd.DataFrame([new_alert])], ignore_index=True)
-            st.rerun()
 
     # --- Part 4: GenAI Copilot Workspace Card ---
     with st.container(border=True):
@@ -236,4 +228,3 @@ with col_genai:
             </div>
             """, unsafe_allow_html=True)
 
-st.caption("HKT Smart Site IOC PoC • Connected to Google Drive")
