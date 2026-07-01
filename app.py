@@ -124,7 +124,7 @@ col_video, col_logs, col_genai = st.columns([4, 3, 4])
 with col_video:
     with st.container(border=True):
         st.subheader("📹 CCTV Live Feed")
-        secure_nhk_stream = "https://fastv.jp"
+        secure_nhk_stream = "https://livetv.fastv.jp/channel_assembly/69607EBD725E0F65BEE4/master.m3u8"
         st.video(secure_nhk_stream, format="video/mp4", autoplay=True, muted=True, loop=True)
         st.caption("🔴 LIVE FEED CHANNEL: CONNECTED (Kowloon Hub Cam-01)")
 
