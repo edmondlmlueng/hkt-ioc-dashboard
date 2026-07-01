@@ -16,23 +16,36 @@ service = get_drive_service()
 
 st.set_page_config(page_title="HKT Smart Site IOC", page_icon="🛡️", layout="wide")
 
+st.markdown("""
+    <style>
+    .main { background-color: #0B111E; }
+    .stButton>button { background-color: #00C2FF; color: white; border-radius: 5px; font-weight: bold; }
+    .report-box { background-color: #161F30; padding: 20px; border-radius: 8px; border-left: 5px solid #00C2FF; color: white; }
+    </style>
+""", unsafe_allow_html=True)
+
 st.title("🛡️ HKT Smart Site Integrated Operations Centre (IOC)")
 st.subheader("Real-Time Safety Compliance & Analytics Terminal")
 st.markdown("---")
 
+# Sidebar (Must-have)
 with st.sidebar:
-    st.header("📁 Shared Alert Folder")
-    st.success("✅ Connected to Google Drive")
+    st.header("Site Telemetry")
+    st.metric("Active Cameras", "4 / 4")
+    st.metric("Alert Status", "ALARM ACTIVE", "-2 Violations")
+    st.info("Location: Kowloon District, HK")
 
 col_video, col_logs, col_genai = st.columns([4, 3, 4])
 
+# Video Section
 with col_video:
     st.header("📹 CCTV Live Feed")
-    st.info("Demo Mode")
+    st.info("Demo Mode - Big Buck Bunny Test Stream")
     st.image("https://picsum.photos/id/1015/800/450", use_container_width=True, caption="Live Feed (Demo)")
 
+# Event Logs + Google Drive Photos
 with col_logs:
-    st.header("🚨 Latest Alerts from Google Drive")
+    st.header("🚨 Latest Alerts from Google Drive + Event Log")
     if st.button("🔄 Refresh from Google Drive"):
         st.rerun()
     
@@ -49,21 +62,44 @@ with col_logs:
         if image_files:
             st.success(f"Found {len(image_files)} alert photos")
             for file in image_files[:8]:
-                st.image(f"https://drive.google.com/uc?export=view&id={file['id']}", 
-                        caption=file['name'], use_container_width=True)
+                st.image(
+                    f"https://drive.google.com/uc?id={file['id']}&export=view", 
+                    caption=file['name'], 
+                    use_container_width=True
+                )
         else:
             st.info("No alert photos found yet.")
     except Exception as e:
-        st.error(f"Error: {str(e)}")
+        st.error(f"Error loading photos: {str(e)}")
 
+    # Event Log
+    if "event_logs" not in st.session_state:
+        st.session_state.event_logs = pd.DataFrame([
+            {"Timestamp": "2026-06-25 09:15", "Zone": "Area A", "Violation": "Missing Hard Hat", "Confidence": "88%"},
+        ])
+    st.dataframe(st.session_state.event_logs, use_container_width=True, hide_index=True)
+    
+    if st.button("Simulate New Alert"):
+        new_alert = {
+            "Timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "Zone": "Zone B",
+            "Violation": "Intrusion Detected",
+            "Confidence": "95%"
+        }
+        st.session_state.event_logs = pd.concat([st.session_state.event_logs, pd.DataFrame([new_alert])], ignore_index=True)
+        st.rerun()
+
+# GenAI Section
 with col_genai:
     st.header("🤖 GenAI Safety Co-Pilot")
+    st.write("Automate compliance workflows.")
     if st.button("⚡ COMPILE DAILY SHIFT REPORT"):
         st.markdown("### 📄 Daily Safety Audit Report")
         st.markdown("""
-        <div style='background-color: #161F30; padding: 20px; border-radius: 8px; border-left: 5px solid #00C2FF; color: white;'>
+        <div class='report-box'>
         New alerts from Google Drive processed.<br><br>
         PPE Compliance: 91%<br>
+        Top Risk Zone: Zone B<br>
         Recommendation: Review uploaded photos.
         </div>
         """, unsafe_allow_html=True)
