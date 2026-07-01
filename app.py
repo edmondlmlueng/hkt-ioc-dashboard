@@ -51,19 +51,18 @@ if "event_logs" not in st.session_state:
     ])
 
 # 3-Column Layout Grid
-col_video, col_logs, col_genai = st.columns([4, 3, 4])
+col_video, col_logs, col_genai = st.columns()
 
 # Video Section
 with col_video:
     with st.container(border=True):
         st.subheader("📹 CCTV Live Feed")
         
-        # Extracted active HLS/M3U8 network endpoints from the repository playlist structure
-        # This streams live multi-bitrate data mimicking an operational RTSP pipeline
-        live_stream_endpoint = "http://58.82.168.138:5002/hdgd06.m3u8?token=guoziyun&gid=hdgd06&channel=zhongying"
+        # Secure production HLS (.m3u8) feed stream link
+        secure_nhk_stream = "https://media-tyo.hls.nhkworld.jp/hls/w/live/master.m3u8"
         
         st.video(
-            live_stream_endpoint,
+            secure_nhk_stream,
             format="video/mp4",
             autoplay=True,
             muted=True,
@@ -123,8 +122,8 @@ with col_genai:
             nbinsx=10, 
             nbinsy=10,
             color_continuous_scale="Viridis",
-            range_x=[0, 100],
-            range_y=[0, 100],
+            range_x=,
+            range_y=,
             labels={"X": "Width Vector (m)", "Y": "Depth Vector (m)"}
         )
         fig.update_layout(
