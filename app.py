@@ -1,88 +1,69 @@
 import streamlit as st
+from google.oauth2.service_account import Credentials
+from googleapiclient.discovery import build
 import pandas as pd
 from datetime import datetime
 
-st.set_page_config(page_title="HKT Smart Site IOC", page_icon="🛡️", layout="wide")
+FOLDER_ID = "1STpOEXxtgMvb-Ova_UrMF9E6CNLJCoAR"
 
-st.markdown("""
-    <style>
-    .main { background-color: #0B111E; }
-    .stButton>button { background-color: #00C2FF; color: white; border-radius: 5px; font-weight: bold; }
-    .report-box { background-color: #161F30; padding: 20px; border-radius: 8px; border-left: 5px solid #00C2FF; color: white; }
-    </style>
-""", unsafe_allow_html=True)
+@st.cache_resource
+def get_drive_service():
+    creds = Credentials.from_service_account_file("credentials.json")
+    return build('drive', 'v3', credentials=creds)
+
+service = get_drive_service()
+
+st.set_page_config(page_title="HKT Smart Site IOC", page_icon="🛡️", layout="wide")
 
 st.title("🛡️ HKT Smart Site Integrated Operations Centre (IOC)")
 st.subheader("Real-Time Safety Compliance & Analytics Terminal")
 st.markdown("---")
 
-# Sidebar
 with st.sidebar:
-    st.header("Site Telemetry")
-    st.metric("Active Cameras", "4 / 4")
-    st.metric("Alert Status", "ALARM ACTIVE", "-2 Violations")
-    st.info("Location: Kowloon District, HK")
-
-# Session State
-if "event_logs" not in st.session_state:
-    st.session_state.event_logs = pd.DataFrame([
-        {"Timestamp": "2026-06-25 09:15", "Zone": "Area A", "Violation": "Missing Hard Hat", "Confidence": "88%"},
-        {"Timestamp": "2026-06-25 10:30", "Zone": "Zone B", "Violation": "Missing High-Vis Vest", "Confidence": "92%"},
-    ])
+    st.header("📁 Shared Alert Folder")
+    st.success("✅ Connected to Google Drive")
 
 col_video, col_logs, col_genai = st.columns([4, 3, 4])
 
-# Video Section (RTSP Demo)
 with col_video:
     st.header("📹 CCTV Live Feed")
-    video_frame = st.empty()
-    video_status = st.empty()
-    
-    col1, col2 = st.columns(2)
-    with col1:
-        if st.button("▶️ Start Live Feed"):
-            st.session_state.video_running = True
-            video_status.success("✅ Live feed started (Demo)")
-    with col2:
-        if st.button("⏹️ Stop Live Feed"):
-            st.session_state.video_running = False
-            video_status.info("Feed stopped")
+    st.info("Demo Mode")
+    st.image("https://picsum.photos/id/1015/800/450", use_container_width=True, caption="Live Feed (Demo)")
 
-    if st.session_state.get("video_running", False):
-        st.image("https://picsum.photos/id/1015/800/450", use_container_width=True, caption="Live CCTV Feed - North Gate (Demo)")
-    else:
-        st.image("https://picsum.photos/id/1015/800/450", use_container_width=True, caption="Click 'Start Live Feed' to activate")
-
-# Logs Section
 with col_logs:
-    st.header("📋 Live Incident Log")
-    st.dataframe(st.session_state.event_logs, use_container_width=True, hide_index=True)
-    
-    if st.button("Simulate New Alert"):
-        new_alert = {
-            "Timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            "Zone": "Material Storage",
-            "Violation": "Intrusion Detected",
-            "Confidence": "95%"
-        }
-        st.session_state.event_logs = pd.concat([st.session_state.event_logs, pd.DataFrame([new_alert])], ignore_index=True)
+    st.header("🚨 Latest Alerts from Edge Team")
+    if st.button("🔄 Refresh from Google Drive"):
         st.rerun()
+    
+    try:
+        results = service.files().list(
+            q=f"'{FOLDER_ID}' in parents and trashed=false",
+            fields="files(id, name, mimeType, createdTime)",
+            orderBy="createdTime desc"
+        ).execute()
 
-# GenAI Section
+        files = results.get('files', [])
+        image_files = [f for f in files if f['mimeType'].startswith('image')]
+
+        if image_files:
+            st.success(f"Found {len(image_files)} alert photos")
+            for file in image_files[:8]:
+                st.image(f"https://drive.google.com/uc?id={file['id']}", caption=file['name'], use_container_width=True)
+        else:
+            st.info("No photos found yet.")
+    except Exception as e:
+        st.error(f"Error: {str(e)}")
+
 with col_genai:
     st.header("🤖 GenAI Safety Co-Pilot")
-    st.write("Automate compliance workflows.")
-    
     if st.button("⚡ COMPILE DAILY SHIFT REPORT"):
-        st.info("📝 GenAI Report (Demo Mode)")
         st.markdown("### 📄 Daily Safety Audit Report")
         st.markdown("""
-        <div class='report-box'>
-        No major violations detected today.<br><br>
-        PPE Compliance Rate: 94%<br>
-        Top Risk Zone: Zone B Scaffold<br>
-        Recommendation: Increase helmet checks in Area A.
+        <div style='background-color: #161F30; padding: 20px; border-radius: 8px; border-left: 5px solid #00C2FF; color: white;'>
+        New alerts from Google Drive processed.<br><br>
+        PPE Compliance: 91%<br>
+        Recommendation: Review uploaded photos.
         </div>
         """, unsafe_allow_html=True)
 
-st.caption("HKT Smart Site IOC PoC • Cloud Version")
+st.caption("HKT Smart Site IOC PoC • Connected to Google Drive")
