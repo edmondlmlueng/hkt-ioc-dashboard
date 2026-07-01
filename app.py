@@ -1,13 +1,11 @@
 import streamlit as st
-import pandas as pd
-from datetime import datetime
 
 st.set_page_config(page_title="HKT IOC", layout="wide")
 
 st.title("🛡️ HKT Smart Site IOC")
 st.subheader("Real-Time Safety Dashboard")
 
-st.success("Dashboard is running")
+st.success("✅ Dashboard is running!")
 
 col1, col2 = st.columns(2)
 
@@ -17,7 +15,7 @@ with col1:
 
 with col2:
     st.header("🚨 Alerts")
-    if st.button("Simulate Alert"):
-        st.success("New alert received!")
+    if st.button("Simulate New Alert"):
+        st.success("New alert received from Edge team!")
 
 st.caption("Simple PoC Version")
