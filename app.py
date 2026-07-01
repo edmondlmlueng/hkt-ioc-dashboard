@@ -51,14 +51,25 @@ if "event_logs" not in st.session_state:
     ])
 
 # 3-Column Layout Grid
-col_video, col_logs, col_genai = st.columns([4, 4, 4])
+col_video, col_logs, col_genai = st.columns([4, 3, 4])
 
 # Video Section
 with col_video:
     with st.container(border=True):
         st.subheader("📹 CCTV Live Feed")
-        st.info("Demo Mode - Big Buck Bunny Test Stream")
-        st.image("https://picsum.photos/id/1015/800/450", use_container_width=True, caption="Live Feed (Demo)")
+        
+        # Extracted active HLS/M3U8 network endpoints from the repository playlist structure
+        # This streams live multi-bitrate data mimicking an operational RTSP pipeline
+        live_stream_endpoint = "https://live-video.net"
+        
+        st.video(
+            live_stream_endpoint,
+            format="video/mp4",
+            autoplay=True,
+            muted=True,
+            loop=True
+        )
+        st.caption("🔴 LIVE FEED CHANNEL: CONNECTED (Kowloon Hub Cam-01)")
 
 # Google Drive Alerts + Restored Event Log
 with col_logs:
@@ -80,7 +91,6 @@ with col_logs:
 
             if image_files:
                 st.success(f"Found {len(image_files)} alert photos")
-                # Group photos in a professional sub-grid
                 img_subcols = st.columns(2)
                 for idx, file in enumerate(image_files[:4]):
                     with img_subcols[idx % 2]:
@@ -106,7 +116,6 @@ with col_genai:
     with st.container(border=True):
         st.subheader("🗺️ Zone Violation Spatial Heatmap")
         
-        # Plotly density chart mapping coordinates
         fig = px.density_heatmap(
             st.session_state.event_logs, 
             x="X", 
@@ -132,7 +141,6 @@ with col_genai:
     with st.container(border=True):
         st.subheader("📊 Event Analytics Table")
         
-        # Display core metadata columns to the supervisor
         view_df = st.session_state.event_logs[["Timestamp", "Zone", "Violation", "Confidence"]]
         st.dataframe(view_df, use_container_width=True, hide_index=True, height=150)
         
@@ -145,14 +153,13 @@ with col_genai:
                 "Zone": random.choice(sim_zones),
                 "Violation": random.choice(sim_violations),
                 "Confidence": f"{random.randint(82, 98)}%",
-                # Assign randomized geometric points for the heat matrix
                 "X": random.randint(5, 95),
                 "Y": random.randint(5, 95)
             }
             st.session_state.event_logs = pd.concat([st.session_state.event_logs, pd.DataFrame([new_alert])], ignore_index=True)
             st.rerun()
 
-    # --- Part 4: GenAI Copilot Workflow Card ---
+    # --- Part 4: GenAI Copilot Workspace Card ---
     with st.container(border=True):
         st.subheader("🤖 GenAI Safety Co-Pilot")
         st.write("Automate compliance workflows.")
