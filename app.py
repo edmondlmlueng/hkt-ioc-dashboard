@@ -84,7 +84,7 @@ def fetch_and_parse_site_events():
         if not items:
             return None
             
-        file_id = items['id']
+        file_id = items[0]['id']
         
         request = service.files().get_media(fileId=file_id)
         file_stream = io.BytesIO()
@@ -142,7 +142,7 @@ if "event_logs" not in st.session_state:
         ])
 
 # 3-Column Layout Grid
-col_video, col_logs, col_genai = st.columns()
+col_video, col_logs, col_genai = st.columns([4, 3, 4])
 
 # Video Section
 with col_video:
@@ -221,7 +221,7 @@ with col_genai:
         # Display localized timeline matrix metadata directly to the operational supervisor
         st.caption(f"🕒 Last checked text log sequence: **{st.session_state.last_parsed_time}**")
         
-        # Grid execution wrapper handling table-exclusive folder file calls
+        # Fixed logic loop without trailing fragments or missing block structures
         if st.button("🔄 Sync Log File Only"):
             updated_df = fetch_and_parse_site_events()
             if updated_df is not None:
