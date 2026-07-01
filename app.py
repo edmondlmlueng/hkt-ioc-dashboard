@@ -4,7 +4,6 @@ from googleapiclient.discovery import build
 import pandas as pd
 from datetime import datetime
 
-# ================== CONFIG ==================
 FOLDER_ID = "1STpOEXxtgMvb-Ova_UrMF9E6CNLJCoAR"
 
 @st.cache_resource
@@ -15,25 +14,22 @@ def get_drive_service():
 
 service = get_drive_service()
 
-# ================== APP ==================
 st.set_page_config(page_title="HKT Smart Site IOC", page_icon="🛡️", layout="wide")
 
 st.title("🛡️ HKT Smart Site Integrated Operations Centre (IOC)")
 st.subheader("Real-Time Safety Compliance & Analytics Terminal")
 st.markdown("---")
 
-# Sidebar
 with st.sidebar:
     st.header("📁 Shared Alert Folder")
     st.success("✅ Connected to Google Drive")
-    st.caption("Folder ID: " + FOLDER_ID[:20] + "...")
 
 col_video, col_logs, col_genai = st.columns([4, 3, 4])
 
 with col_video:
     st.header("📹 CCTV Live Feed")
     st.info("Demo Mode - Big Buck Bunny Test Stream")
-    st.image("https://picsum.photos/id/1015/800/450", use_container_width=True, caption="Live Feed (Demo)")
+    st.image("https://picsum.photos/id/1015/800/450", width=800, caption="Live Feed (Demo)")
 
 with col_logs:
     st.header("🚨 Latest Alerts from Edge Team")
@@ -52,8 +48,8 @@ with col_logs:
 
         if image_files:
             st.success(f"Found {len(image_files)} alert photos")
-            for file in image_files[:8]:
-                st.image(f"https://drive.google.com/uc?id={file['id']}", caption=file['name'], use_container_width=True)
+            for file in image_files[:6]:
+                st.image(f"https://drive.google.com/uc?id={file['id']}", caption=file['name'], width=700)
         else:
             st.info("No alert photos found yet.")
     except Exception as e:
@@ -64,7 +60,7 @@ with col_genai:
     if st.button("⚡ COMPILE DAILY SHIFT REPORT"):
         st.markdown("### 📄 Daily Safety Audit Report")
         st.markdown("""
-        <div style='background-color: #161F30; padding: 20px; border-radius: 8px; border-left: 5px solid #00C2FF;'>
+        <div style='background-color: #161F30; padding: 20px; border-radius: 8px; border-left: 5px solid #00C2FF; color: white;'>
         New alerts from Google Drive processed.<br><br>
         PPE Compliance: 91%<br>
         Recommendation: Review uploaded photos.
