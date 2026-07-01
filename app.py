@@ -21,7 +21,7 @@ def get_drive_service():
 
 service = get_drive_service()
 
-# Professional Dark Theme Overrides
+# Clean Dark Theme CSS Overrides
 st.markdown("""
     <style>
     .main { background-color: #0B111E; color: #E2E8F0; }
@@ -30,8 +30,6 @@ st.markdown("""
     .report-box { background-color: #161F30; padding: 20px; border-radius: 8px; border-left: 5px solid #00C2FF; color: white; }
     div[data-testid="stMetricValue"] { font-size: 26px !important; color: #00C2FF !important; font-weight: 700; }
     h1, h2, h3, h4 { margin-bottom: 0.2rem !important; }
-    
-    /* Equipment Status Style Blocks inside Sidebar */
     .status-card { background-color: #111A2E; padding: 10px 12px; border-radius: 6px; border: 1px solid #1E2D4A; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
     .badge-online { background-color: rgba(0, 224, 150, 0.15); color: #00E096; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 10px; border: 1px solid #00E096; }
     .badge-warning { background-color: rgba(255, 170, 0, 0.15); color: #FFAA00; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 10px; border: 1px solid #FFAA00; }
@@ -42,16 +40,13 @@ st.title("🛡️ HKT Smart Site Integrated Operations Centre (IOC)")
 st.subheader("Real-Time Safety Compliance & Analytics Terminal")
 st.markdown("---")
 
-# Sidebar Layout with Telemetry & Infrastructure Blocks
+# Sidebar
 with st.sidebar:
     st.header("Site Telemetry")
     st.metric("Active Cameras", "4 / 4")
     st.metric("Alert Status", "ALARM ACTIVE", "-2 Violations")
     st.info("Location: Kowloon District, HK")
-    
     st.markdown("---")
-    
-    # Infrastructure & Equipment Status Section
     st.header("🖥️ Device Infrastructure")
     st.markdown("""
     <div class="status-card">
@@ -84,8 +79,7 @@ def fetch_and_parse_site_events():
         if not items:
             return None
             
-        file_id = items[0]['id']
-        
+        file_id = items['id']
         request = service.files().get_media(fileId=file_id)
         file_stream = io.BytesIO()
         downloader = MediaIoBaseDownload(file_stream, request)
@@ -108,7 +102,6 @@ def fetch_and_parse_site_events():
                         key, val = token.split(":", 1)
                         k_clean = key.strip().upper()
                         v_clean = val.strip()
-                        
                         if "TIMESTAMP" in k_clean: log_entry["Timestamp"] = v_clean
                         elif "ZONE" in k_clean: log_entry["Zone"] = v_clean
                         elif "EVENT" in k_clean: log_entry["Violation"] = v_clean
@@ -121,14 +114,12 @@ def fetch_and_parse_site_events():
                     parsed_logs.append(log_entry)
                     
         if parsed_logs:
-            # Capture the exact timestamp of this safe parsing action
             st.session_state.last_parsed_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             return pd.DataFrame(parsed_logs)
     except Exception as parse_error:
         st.sidebar.error(f"Failed to scan site_events.txt: {str(parse_error)}")
     return None
 
-# Initial compilation pass mapping fallback placeholders safely if missing
 if "last_parsed_time" not in st.session_state:
     st.session_state.last_parsed_time = "Never Synced"
 
@@ -141,10 +132,10 @@ if "event_logs" not in st.session_state:
             {"Timestamp": "2026-06-25 09:15", "Zone": "Area A", "Violation": "Missing Hard Hat", "Confidence": "88%", "X": 45, "Y": 65},
         ])
 
-# 3-Column Layout Grid
-col_video, col_logs, col_genai = st.columns([4, 3, 4])
+# Grid Columns
+col_video, col_logs, col_genai = st.columns()
 
-# Video Section
+# Video Column
 with col_video:
     with st.container(border=True):
         st.subheader("📹 CCTV Live Feed")
@@ -152,7 +143,7 @@ with col_video:
         st.video(secure_nhk_stream, format="video/mp4", autoplay=True, muted=True, loop=True)
         st.caption("🔴 LIVE FEED CHANNEL: CONNECTED (Kowloon Hub Cam-01)")
 
-# Google Drive Alerts + Restored Event Log
+# Photo Alerts Column
 with col_logs:
     with st.container(border=True):
         st.subheader("🚨 Latest Alerts from Google Drive")
@@ -165,10 +156,8 @@ with col_logs:
                 fields="files(id, name, mimeType, createdTime)",
                 orderBy="createdTime desc"
             ).execute()
-
             files = results.get('files', [])
             image_files = [f for f in files if f['mimeType'].startswith('image')]
-
             if image_files:
                 st.success(f"Found {len(image_files)} alert photos")
                 img_subcols = st.columns(2)
@@ -190,9 +179,8 @@ with col_logs:
         except Exception as e:
             st.error(f"Error: {str(e)}")
 
-# GenAI Section & Analytics Heatmap
+# Heatmap & Tables Analytics Column
 with col_genai:
-    # --- Part 1: Spatial Alert Heatmap Card ---
     with st.container(border=True):
         st.subheader("🗺️ Zone Violation Spatial Heatmap")
         fig = px.density_heatmap(
@@ -205,26 +193,34 @@ with col_genai:
             labels={"X": "Width Vector (m)", "Y": "Depth Vector (m)"}
         )
         fig.update_layout(
-            paper_bgcolor='rgba(0,0,0,0)',
-            plot_bgcolor='rgba(0,0,0,0)',
-            font_color="#E2E8F0",
-            margin=dict(l=10, r=10, t=10, b=10),
-            height=220,
-            coloraxis_showscale=False
+            paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
+            font_color="#E2E8F0", margin=dict(l=10, r=10, t=10, b=10),
+            height=220, coloraxis_showscale=False
         )
         st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
 
-    # --- Part 2: Upgraded Event Log Table with Local Sync Control Actions ---
     with st.container(border=True):
         st.subheader("📊 Event Analytics Table")
-        
-        # Display localized timeline matrix metadata directly to the operational supervisor
         st.caption(f"🕒 Last checked text log sequence: **{st.session_state.last_parsed_time}**")
         
-        # Fixed logic loop without trailing fragments or missing block structures
+        # Clean sync execution block: completely removed dangerous clipped else branches
         if st.button("🔄 Sync Log File Only"):
             updated_df = fetch_and_parse_site_events()
             if updated_df is not None:
                 st.session_state.event_logs = updated_df
                 st.rerun()
-            else:
+                
+        view_df = st.session_state.event_logs[["Timestamp", "Zone", "Violation", "Confidence"]]
+        st.dataframe(view_df, use_container_width=True, hide_index=True, height=150)
+
+    with st.container(border=True):
+        st.subheader("🤖 GenAI Safety Co-Pilot")
+        st.write("Automate compliance workflows.")
+        if st.button("⚡ COMPILE DAILY SHIFT REPORT"):
+            st.markdown("### 📄 Daily Safety Audit Report")
+            st.markdown("""
+            <div class='report-box'>
+            New alerts from Google Drive processed.<br><br>
+            PPE Compliance: 91%<br>
+            Top Risk Zone: Zone B<br>
+            Recommendation: Review uploaded photos.
